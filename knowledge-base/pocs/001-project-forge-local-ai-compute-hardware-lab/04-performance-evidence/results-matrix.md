@@ -1,0 +1,48 @@
+# Results Matrix: Project FORGE — Local AI Compute & Hardware Lab
+
+Only complete, evidence-backed metrics are entered. `N/R` means not recorded for that run, not zero.
+
+> **Extra-comparison boundary:** Rows beginning with `X-` are supplementary model comparisons. They do not replace the Qwen3 size-tier baseline or independently change a hardware procurement decision.
+
+| Run | Model | Quantization | Machine | Backend | Model Size | RAM | VRAM / Shared | Load Time | Prompt Tokens/s | Generation Tokens/s | Context | GPU Offload | Experience / Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| A-001 | Qwen3 14B | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA mixed offload | 14.8B | 32 GiB | 7,746 MiB / 8,192 MiB post-run; shared memory N/R | 0.125 s (warm) | 265.69 | 7.56 | 4096 | 37% CPU / 63% GPU | `no-thinking`; 151 prompt tokens; 446 generated tokens; 59.691 s total; 2% GPU utilization is post-run idle only; operator rating: usable — a little slow |
+| A-002 | Qwen3 14B | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA mixed offload | 14.8B | 32 GiB | N/R for this run; same runtime/model configuration | 0.120 s (warm) | 339.18 | 7.28 | 4096 | N/R for this run; prior observed placement 37% CPU / 63% GPU | `thinking`; 145 prompt tokens; 1,038 generated tokens including visible reasoning; 143.222 s total; final answer reported 398 words but used Markdown despite the no-formatting instruction; operator rating: too slow because visible reasoning delays the final answer |
+| A-003 | Qwen3 14B | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA mixed offload | 14.8B | 32 GiB | N/R for this run; same runtime/model configuration | N/R — interactive session loaded model before prompt | 278.62 | 7.02 | 4096 | N/R for this run; prior observed placement 37% CPU / 63% GPU | `no-thinking`; 151 prompt tokens; 412 generated tokens; 59.368 s total; prompt response was direct and did not show visible reasoning |
+| A-004 | Qwen3 14B | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA mixed offload | 14.8B | 32 GiB | Model confirmed unloaded after run (`--keepalive=0`) | 5.794 s (cold) | 435.04 | 7.48 | CLI default / not reported | N/R for this run | `no-thinking`; prompt variant `v1-cli-cold`; 136 prompt tokens; 487 generated tokens; 71.205 s total; first valid cold-load metric; not an exact prefill comparison with v1 |
+| A-005 | Qwen3 14B | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA mixed offload | 14.8B | 32 GiB | N/R for this run | 6.669 s (reported) | 416.15 | 6.38 | 8192 configured | N/R for this run | `no-thinking`; exact Prompt v1; 151 prompt tokens; 519 generated tokens; 88.345 s total; output used Markdown despite constraint; configuration-capacity observation only, not a long-context impact result |
+| A-006 | Qwen3 14B | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA mixed offload | 14.8B | 32 GiB | N/R — model unloaded after run (`--keepalive=0`) | 5.602 s (cold) | 1006.12 | 8.90 | 4096 configured | N/R for this run | `no-thinking`; context fixture v2; 3,200 prompt tokens; 4 generated tokens; 9.255 s total; valid long-context prefill baseline |
+| A-007 | Qwen3 14B | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA mixed offload | 14.8B | 32 GiB | 7,703 MiB / 8,192 MiB post-run; shared memory N/R | 5.547 s (cold) | 940.57 | 7.37 | 8192 configured | 42% CPU / 58% GPU | `no-thinking`; same context fixture v2; 3,200 prompt tokens; 4 generated tokens; 9.515 s total; directly comparable to A-006; 3% GPU is post-run idle only |
+| A-008 | Qwen3 14B | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA mixed offload | 14.8B | 32 GiB | 7,819 MiB / 8,192 MiB post-run; shared memory N/R | 5.292 s (cold) | 1018.93 | 8.74 | 4096 configured | 37% CPU / 63% GPU | `no-thinking`; same context fixture v2; 3,200 prompt tokens; 4 generated tokens; 8.912 s total; directly comparable to A-007; 1% GPU is post-run idle only |
+| A-009 | Qwen3 8B | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA | 8.19B | 32 GiB | `ollama ps`: 5.6 GB loaded model, 100% GPU; `nvidia-smi`: 7,318 MiB / 8,192 MiB post-load | 3.024 s (cold) | 934.61 | 68.75 | **4096 configured** | 100% GPU | `no-thinking`; model profile `forge-qwen3-8b-desktop-ctx4096-nothink`; intended `v1-cli-cold` workload; 135 prompt tokens and 521 generated tokens; 10.750 s total; operator rating: usable–excellent. WDDM post-load VRAM includes desktop/other-process overhead; per-process value unavailable. |
+| A-010 | Qwen3 32B | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA mixed offload | 32.8B | 32 GiB | `ollama ps`: 21 GB loaded model; `nvidia-smi`: 7,658 MiB / 8,192 MiB post-load | 55.333 s (cold) | 125.72 | 2.01 | **4096 configured** | 71% CPU / 29% GPU | `no-thinking`; model profile `forge-qwen3-32bdesktop-ctx4096-nothink`; intended `v1-cli-cold` workload; 135 prompt tokens and 539 generated tokens; 324.111 s total; model completed successfully; operator rating: too slow. WDDM post-load VRAM includes desktop/other-process overhead; 2% GPU is post-run idle only. |
+| A-011 | Qwen3 8B | Q4_K_M | Machine A — Desktop | llama.cpp b10218 / CUDA 12.4 package | 8.19B | 32 GiB | CLI exits after run; verbose evidence: CUDA model allocation 4,643 MiB + 576 MiB KV + 100 MiB compute; post-run VRAM N/R | N/R (not emitted by CLI summary) | 1136.8 | 69.7 | 4096 | **37/37 layers to CUDA; output layer and 4K KV cache on CUDA** | `no-thinking` validated using `LLAMA_ARG_CHAT_TEMPLATE_KWARGS={"enable_thinking":false}`; same benchmark intent; CLI emitted aggregate prompt/generation rates but no output-token count in captured evidence. Not bit-exact versus Ollama due runtime/template differences; operator rating: usable–excellent |
+| A-012 | Qwen3 8B | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA | 8.19B | 32 GiB | Peak sampled: 6,759 MiB / 8,192 MiB NVIDIA VRAM; 14,617 MiB system RAM used | 3.045 s (cold) | 1090.82 | 68.80 | 4096 | 100% GPU previously confirmed for this profile | `no-thinking`; telemetry run with `--keepalive=0`; 135 prompt tokens; 447 generated tokens; 9.669 s total. One-second peak samples: 28.33% system CPU, 951 MiB Ollama/llama-server working set, 96% GPU, 219.44 W, 61 °C. Output length differs from A-009; rates are a repeat observation, not an exact fixed-output comparison. |
+| X-001 | Llama 3.1 8B Instruct | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA | 8.03B | 32 GiB | 6,719 MiB / 8,192 MiB post-load; `ollama ps` model size 5.3 GB | 0.139 s (warm) | 461.45 | 73.93 | 4096 | 100% GPU | Extra model-comparison test; 125 prompt tokens, 748 generated tokens, 10.531 s total; output length differs from Qwen3 8B rows, so generation-rate comparison is directional. WDDM total includes desktop/other-process overhead; 3% GPU is post-run idle. Operator rating: usable–excellent (`muy bueno`). |
+| X-002 | Llama 3.1 8B Instruct | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA | 8.03B | 32 GiB | Model unloaded after run (`--keepalive=0`) | 3.081 s (cold) | 2049.89 | 73.37 | 4096 | 100% GPU confirmed in X-001 | Extra model-comparison cold run; 125 prompt tokens, 658 generated tokens, 12.113 s total. Compared directionally with Qwen3 8B cold A-009: prompt tokenization and output length differ, so rates are not a fixed-token latency verdict. |
+| X-003 | Ministral 3 8B Instruct 25.12 | Q4_K_M | Machine A — Desktop | Ollama / NVIDIA CUDA mixed offload | 8B | 32 GiB | 7,655 MiB / 8,192 MiB post-load; `ollama ps` model size 6.0 GB | 4.608 s (cold) | 2351.17 | 51.36 | 4096 | 8% CPU / 92% GPU | Extra model-comparison cold run; **674 prompt tokens** and 1,176 generated tokens, 27.798 s total. The prompt text was the common benchmark, but effective prompt-token count is far higher than Qwen3/Llama, likely reflecting template and/or tokenizer differences; prefill and generation rates are not directly comparable. Output exceeded the requested 350–450 words and used Markdown formatting. WDDM total includes desktop/other-process overhead; 9% GPU is post-run idle. Operator rating: usable. |
+
+## Peak Telemetry Captures
+
+| Evidence ID | Workload | Peak observations | Caveat |
+| --- | --- | --- | --- |
+| T-A01 | Machine A / Ollama / Qwen3 8B / 4K | 96% NVIDIA GPU; 6,759 MiB / 8,192 MiB VRAM; 219.44 W; 61 °C; 28.33% system CPU; 14,617 MiB RAM used | One-second samples; NVIDIA values are GPU-specific. Corresponding benchmark row A-012 includes timings. |
+
+## Context Capacity Observation: A-008 vs. A-007
+
+| Metric | 4096 configured (A-008) | 8192 configured (A-007) | Observed difference |
+| --- | --- | --- | --- |
+| Prompt tokens | 3,200 | 3,200 | Same fixture |
+| Prompt evaluation | 1,018.93 tok/s | 940.57 tok/s | 8192 lower by 7.7% |
+| Generation | 8.74 tok/s | 7.37 tok/s | 8192 lower by 15.7%; only 4 generated tokens, so low confidence |
+| GPU placement | 63% | 58% | 8192 shifted 5 percentage points to CPU |
+| Post-run VRAM | 7,819 MiB | 7,703 MiB | Post-run idle allocations; not a peak-memory measurement |
+
+This is one controlled run per configuration. Treat the prefill difference as an observed directional effect, not a statistically stable benchmark.
+
+## Interpretation Rules
+
+- An interactive `ollama run` session may load a model before the user prompt is sent; its prompt-level `load duration` is not a cold model-load measurement.
+- GPU placement, VRAM, CPU utilization, and GPU utilization must be captured separately for each accepted performance result when possible.
+- Thinking and no-thinking profiles are separate rows and are not merged into one throughput result.
+- Configuring `num_ctx` to 8192 is not a long-context test when the prompt contains only 151 tokens.
