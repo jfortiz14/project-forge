@@ -1,4 +1,4 @@
-# Project FORGE
+# Project FORGE — Local AI Compute & Hardware Lab
 
 > **Project FORGE is a personal, independent research and experimentation project focused on local AI inference, hardware performance, and model quality.**
 
