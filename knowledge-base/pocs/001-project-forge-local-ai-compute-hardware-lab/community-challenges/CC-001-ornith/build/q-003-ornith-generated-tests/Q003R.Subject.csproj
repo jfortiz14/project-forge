@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SubjectSource Condition="'$(SubjectSource)' == ''">..\..\tests\q-003-reference-v1\src\IntakeDomain.cs</SubjectSource>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(SubjectSource)" Link="IntakeDomain.cs" />
+  </ItemGroup>
+</Project>

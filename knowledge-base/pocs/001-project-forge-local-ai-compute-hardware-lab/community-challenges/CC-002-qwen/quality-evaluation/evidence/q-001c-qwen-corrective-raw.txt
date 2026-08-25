@@ -1,0 +1,69 @@
+1. Architecture and Azure service choices
+The system comprises an ASP.NET Core HTTP API front-end and a background worker hosted on Azure Container Apps or
+a Linux VM Scale Set, both authenticated via Microsoft Entra managed identity. The API accepts document metadata
+and a validated blob reference but never ingests content directly, deferring processing to a decoupled Azure
+Service Bus queue. This design ensures rapid response times by persisting the request intent before queuing. Azure
+Table Storage serves as the authoritative store for idempotency keys and processing status, chosen for its atomic
+operations and low-latency access required for concurrency control. Blob storage holds the actual documents, with
+access strictly controlled via SAS tokens or container-level policies rather than public access, ensuring the
+worker can retrieve content only when authorized.
+
+2. C#/.NET module and API design
+The solution follows a clean architecture pattern with distinct layers: Infrastructure, Domain, Application, and
+Presentation. The Presentation layer exposes a single REST endpoint accepting the idempotency key and blob
+reference. The Application layer orchestrates the workflow, ensuring the idempotency check occurs atomically
+before any message is enqueued. The worker implements the "claim" pattern: upon polling the queue, it attempts to
+acquire an exclusive lease on the processing record in Table Storage. If the lease succeeds, the worker
+transitions the state to `Processing` and executes the business logic; otherwise, it releases the claim and
+retries later. This guarantees that no two workers process the same document instance simultaneously, preventing
+duplicate external side effects.
+
+3. Data, identity, and idempotency design
+Idempotency relies on a composite key in Table Storage combining the request ID and the provided stable
+idempotency token. Before enqueuing, the API performs an optimistic update; if a record with this key exists in
+`Completed` or `Processing` states, it returns the existing result immediately without creating a duplicate queue
+message. State transitions are strictly enforced: `Pending` to `Processing`, `Processing` to `Completed` or
+`Failed`. Lease expiry logic ensures that if a worker crashes mid-operation, the lease eventually expires,
+allowing another instance to claim and resume or fail the process safely.
+
+Identity is managed exclusively via Microsoft Entra managed identities. The API requires the `Azure Service Bus
+Data Sender` role for the queue, while the worker requires `Azure Service Bus Data Receiver`, `Data Owner` (for
+table access during state updates), and `Storage Blob Reader` on the specific source container. Authorization
+validates that the submitted blob reference falls within a pre-defined allowed scope or tenant before acceptance,
+preventing unauthorized cross-container access attempts.
+
+4. Failure handling and operations
+The system implements configurable retry policies with exponential backoff for transient failures. Once the retry
+limit is exceeded, the message is moved to the Dead-Letter Queue (DLQ). DLQ ownership is explicit: only an
+authorized administrative process or a dedicated monitoring worker can inspect these messages. Inspection criteria
+include failure count, error codes, and payload size. A manual replay procedure is defined where operators
+validate the root cause and trigger a re-queue of valid messages; automatic replay of poison messages is strictly
+prohibited to prevent infinite loops or repeated failures. Structured logging includes correlation IDs across all
+components, enabling end-to-end traceability via Application Insights. Health checks expose endpoint status and
+queue depth metrics for operational dashboards.
+
+5. Test strategy
+The testing approach focuses on unit tests for domain logic, specifically verifying state transition rules and
+idempotency behaviors under race conditions. Integration tests utilize Azure Storage Emulator or local containers
+to validate Service Bus enqueuing, lease acquisition, and DLQ routing against real Azure SDKs. Contract testing
+ensures the API response format matches client expectations. A critical focus is simulating transient network
+failures and worker crashes to verify that state transitions remain consistent and no duplicate side effects occur
+in the presence of retries.
+
+6. Risks, assumptions, and open decisions
+The primary risk is Table Storage contention during high-throughput spikes, potentially impacting idempotency
+latency; this requires monitoring partition key design for hot partitions. We assume managed identities are
+correctly configured with minimal permissions across all hosts. An open decision involves the specific TTL for
+lease expiration; it must balance between allowing sufficient time for slow processing and ensuring rapid recovery
+from worker failures. Finally, we assume blob references remain valid throughout the processing window; if a blob
+is deleted externally during processing, the worker must handle this as a fatal error requiring manual
+intervention rather than retry.
+
+total duration:       1m47.3499397s
+load duration:        1m12.5164228s
+prompt eval count:    434 token(s)
+prompt eval duration: 1.863555s
+prompt eval rate:     232.89 tokens/s
+eval count:           912 token(s)
+eval duration:        32.953555999s
+eval rate:            27.68 tokens/s

@@ -1,0 +1,64 @@
+### 1. Architecture and Azure service choices
+The solution comprises two distinct applications: a lightweight API host and a long-running worker service, both
+deployed as Azure Container Instances or within an App Service Plan to minimize infrastructure overhead. The
+system relies exclusively on managed identities for zero-trust authentication, eliminating the need for secrets in
+configuration files. Azure Service Bus is selected as the primary queueing mechanism due to its robust built-in
+dead-lettering capabilities and support for session-based processing. For state persistence, Azure Table Storage
+provides a cost-effective, low-latency store for tracking document status and idempotency tokens. Application
+insights and Prometheus-compatible metrics are collected via native SDKs to ensure comprehensive observability
+without external agents.
+
+### 2. C#/.NET module and API design
+The .NET solution follows a clean architecture pattern divided into distinct domain modules. The API layer is an
+ASP.NET Core Minimal API designed strictly for ingestion, accepting JSON payloads containing document metadata and
+blob SAS references while returning a 202 Accepted status immediately. This decouples the request-response cycle
+from processing logic. A separate `DocumentProcessor` module handles background work via Azure Functions or
+Service Bus Worker Role templates. The worker implements the "receive-and-process" pattern where it deserializes
+messages, validates the referenced blob existence, and executes business logic. Correlation IDs are generated at
+the API entry point and propagated through the message envelope to correlate logs across the queue and storage
+layers. Dependency injection is configured per module, ensuring loose coupling between transport mechanisms and
+business rules.
+
+### 3. Data, identity, and idempotency design
+Identity management utilizes a single system-assigned managed identity shared between both applications, granting
+permissions via Azure RBAC on Service Bus namespaces and Storage accounts. This enforces principle of least
+privilege. Idempotency is enforced using a composite key in Table Storage consisting of the document ID and the
+source blob URI hash. Upon receiving a message, the worker attempts to create or update a row with an
+"in-progress" state. If a duplicate request arrives, the system detects the existing record and immediately
+returns success without reprocessing, ensuring exactly-once execution semantics despite potential network retries.
+Status transitions (enqueued, processing, succeeded, failed) are atomic operations using ETags to prevent race
+conditions during concurrent updates.
+
+### 4. Failure handling and operations
+Transient failures, such as Service Bus transient errors or blob timeouts, are handled via the native Azure SDK
+retry policies with exponential backoff, configurable up to a maximum limit. If a message fails after exhausting
+all retries, it is automatically moved to the dead-letter queue (DLQ). The system includes a dedicated health
+probe endpoint that verifies connectivity to Azure SQL and Table Storage endpoints without executing heavy
+business logic. Structured logging captures severity levels, correlation IDs, and context data at every stage.
+Operational metrics include queue depth, average processing duration, and failure rates. A periodic background
+timer scans the DLQ for manual inspection or automated alerting, ensuring no message is silently lost.
+
+### 5. Test strategy
+Unit testing focuses on pure C# logic using xUnit, mocking external dependencies like the Service Bus client and
+Table Storage SDK via interfaces. Tests verify idempotency logic by simulating duplicate messages and confirming
+that processing logic is skipped on subsequent calls. Integration testing utilizes the Azure Storage Emulator or a
+dedicated Azure DevTest Lab environment to validate end-to-end flows from API ingestion through queue dispatch to
+final status updates. These tests run in CI pipelines to ensure backward compatibility and regression detection
+before deployment.
+
+### 6. Risks, assumptions, and open decisions
+A primary assumption is that blob storage latency will remain within acceptable bounds for the API response time;
+high blob write rates could introduce tail latency. The system assumes a trusted internal network where the API
+and worker share the same managed identity scope. An open decision involves whether to batch process multiple
+document requests in a single worker invocation to optimize throughput, which complicates failure granularity
+versus processing efficiency. Security risks regarding SAS token expiration are mitigated by ensuring tokens are
+short-lived or refreshed via the upstream system before the worker attempts access.
+
+total duration:       1m46.8450191s
+load duration:        1m14.9346561s
+prompt eval count:    302 token(s)
+prompt eval duration: 1.716976s
+prompt eval rate:     175.89 tokens/s
+eval count:           836 token(s)
+eval duration:        30.176548s
+eval rate:            27.70 tokens/s
