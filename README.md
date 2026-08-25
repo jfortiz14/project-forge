@@ -1,4 +1,4 @@
-# Project FORGE — Local AI Compute & Hardware Lab
+# Project FORGE
 
 > **Project FORGE is a personal, independent research and experimentation project focused on local AI inference, hardware performance, and model quality.**
 
@@ -20,12 +20,16 @@ The project measures more than token throughput: model-load time, prefill, gener
 | Ministral 3 8B | Usable; about 51 tok/s with greater VRAM use. |
 | Qwen3 14B | Usable but slow; roughly 7 tok/s because of CPU/GPU offload. |
 | Qwen3 32B | Capacity-feasible but not interactive; about 2 tok/s. |
+| Ornith 1.5 35B-A3B Q4_K_M | Runnable under mixed CPU/GPU offload; 28.42–31.24 generation tok/s across three no-thinking baseline runs. Baseline format drifted, and no autonomous quality unit passed. |
+| Qwen3.5 35B-A3B Q4_K_M | Runnable under mixed CPU/GPU offload; 27.60–30.23 generation tok/s across three no-thinking baseline runs. Baseline prose was format-consistent, but no autonomous quality unit passed. |
 
 Local models are treated as drafting and planning assistants. They are not accepted as autonomous authorities for architecture, implementation, testing, code review, or deployment; human review, compilation, and executable tests remain required.
 
 ## Documentation Map
 
 - [POC narrative and reading order](knowledge-base/pocs/001-project-forge-local-ai-compute-hardware-lab/README.md)
+- [Community challenges index](knowledge-base/pocs/001-project-forge-local-ai-compute-hardware-lab/community-challenges/README.md)
+- [Community challenges performance and quality summary](knowledge-base/pocs/001-project-forge-local-ai-compute-hardware-lab/community-challenges/community-challenges-summary.md)
 - [Executive proposal](knowledge-base/proposals/001-project-forge-local-ai-compute-hardware-lab.md)
 - [Architecture decision record](knowledge-base/adrs/001-project-forge-local-ai-compute-hardware-lab.md)
 - [Current POC findings](knowledge-base/pocs/001-project-forge-local-ai-compute-hardware-lab/06-findings-and-decision/results.md)
