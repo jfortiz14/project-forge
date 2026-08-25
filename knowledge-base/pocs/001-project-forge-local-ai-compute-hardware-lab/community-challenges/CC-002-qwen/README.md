@@ -26,20 +26,20 @@ This experiment inherits:
 ## Model Source vs Operational Alias
 
 - **Source model:** `qwen3.5:35B-A3B`
-- **FORGE operational alias:** `forge-qwen35-35B-A3B-ctx4096-nothink`
+- **FORGE operational alias:** `forge-qwen3-35B-A3B-ctx4096-nothink:latest`
 
-The source model is the artifact that must be downloaded or imported. The FORGE alias is the local experimental name used after the source model is available.
+The source model was downloaded or imported first. The FORGE alias above is the executed local name captured in the baseline and quality artifacts.
 
 ## Experiment Boundary
 
-- `CC-002A-independent-baseline` will establish the frozen independent comparison point.
-- `CC-002B-community-configuration` will evaluate the community-recommended configuration against the frozen baseline.
+- `CC-002A-independent-baseline` established the frozen independent comparison point.
+- No CC-002B community configuration is currently defined.
 
 ## Execution Rule
 
-Do not begin `CC-002A` until the frozen baseline protocol is documented and explicitly reviewed against the original FORGE benchmark and quality contracts.
+`CC-002A` has already been executed; keep the recorded baseline, quality, and historical artifacts unchanged.
 
-## Planned Artifact Set
+## Recorded Artifact Set
 
 - research question
 - hypothesis
@@ -50,4 +50,4 @@ Do not begin `CC-002A` until the frozen baseline protocol is documented and expl
 
 ## Status
 
-Planned. No new measurements are recorded yet.
+Completed. The baseline, quality evaluation, and supporting evidence are recorded in the linked artifacts.

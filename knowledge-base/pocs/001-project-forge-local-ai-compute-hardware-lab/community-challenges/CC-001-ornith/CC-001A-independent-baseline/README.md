@@ -3,20 +3,20 @@
 > **Category:** Community Challenge baseline
 > **Parent:** `CC-001-ornith`
 > **Experiment ID:** `FORGE-CC-001A`
-> **Status:** Protocol frozen; no measurements yet
+> **Status:** Baseline captured; results and quality evaluation recorded
 
 ## Purpose
 
-Establish a frozen, FORGE-comparable baseline for Ornith 1.5 35B-A3B before any community-recommended configuration is tested.
+Establish and record the FORGE-comparable baseline for Ornith 1.5 35B-A3B on Machine A.
 
-This slice does not restart the FORGE initiative. It inherits the original Machine A methodology, benchmark contract, and quality contract where applicable, and it records only the minimum experiment-specific additions needed to keep the run reproducible.
+This slice does not restart the FORGE initiative. It inherits the original Machine A methodology, benchmark contract, and quality contract where applicable, and it records the executed baseline, the associated results, and the completed quality evaluation.
 
 ## Model Source vs Operational Alias
 
 - **Source model:** `hf.co/ornith-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M`
 - **FORGE operational alias:** `forge-ornith-35B-A3B-ctx4096-nothink`
 
-The source model must be pulled or imported first. The FORGE alias is what the baseline run uses locally after the source model is available.
+The source model was pulled or imported first. The FORGE alias is the local experimental name used for the captured baseline run.
 
 ## Inherited FORGE Rules
 
@@ -49,21 +49,13 @@ The following elements remain unchanged unless the original FORGE documents alre
 
 ## Open Inputs That Must Be Fixed Before Execution
 
-- exact source-model acquisition method
-- exact runtime/backend to use
-- exact thinking profile
-- exact prompt variant to run
-- exact context target
-- exact output boundary for the quality unit, if applicable
-- exact command form for the operator run
+The baseline run has already been executed, so these inputs are retained only as historical setup context in the linked artifacts.
 
 ## Execution Guardrails
 
-- Do not introduce a new prompt family unless it is explicitly derived from FORGE and documented as such.
-- Do not change the benchmark contract just to make Ornith look better or easier to run.
-- Do not record any result until the command, model, profile, and context are frozen.
-- If a direct comparison is not possible, record the incompatibility instead of changing the method.
+- The captured artifacts preserve the original prompt family and benchmarking contract.
+- Any comparability caveats remain documented in the results and quality materials.
 
 ## Immediate Next Step
 
-Define the exact frozen command set for the first baseline run and verify it against the original FORGE documents before any measurement is taken.
+Review the recorded results and quality evaluation artifacts if a cross-challenge comparison is needed.

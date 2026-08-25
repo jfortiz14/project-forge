@@ -29,13 +29,13 @@ The source model is the artifact that must be downloaded or imported. The FORGE 
 ## Experiment Boundary
 
 - `CC-001A-independent-baseline` establishes the frozen independent comparison point.
-- `CC-001B-community-configuration` will evaluate the community-recommended configuration against the frozen baseline.
+- No CC-001B community configuration is currently defined.
 
 ## Execution Rule
 
 Do not begin `CC-001A` until the frozen baseline protocol is documented and explicitly reviewed against the original FORGE benchmark and quality contracts.
 
-## Planned Artifact Set
+## Recorded Artifact Set
 
 - research question
 - hypothesis
@@ -46,4 +46,4 @@ Do not begin `CC-001A` until the frozen baseline protocol is documented and expl
 
 ## Status
 
-Planned. No new measurements are recorded yet.
+Completed. CC-001A baseline evidence, results, and quality artifacts are recorded in the linked challenge materials.

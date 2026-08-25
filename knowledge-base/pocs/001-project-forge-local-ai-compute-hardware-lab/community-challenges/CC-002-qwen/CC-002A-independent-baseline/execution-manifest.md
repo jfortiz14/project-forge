@@ -3,7 +3,7 @@
 > **Experiment:** `FORGE-CC-002A`
 > **Challenge:** `CC-002-qwen`
 > **Parent POC:** `001-project-forge-local-ai-compute-hardware-lab`
-> **Status:** Frozen, not yet executed
+> **Status:** Baseline captured
 
 ## Objective
 
@@ -12,9 +12,9 @@ Capture a FORGE-comparable performance baseline for `qwen3.5:35B-A3B` on Machine
 ## Model Source vs Operational Alias
 
 - **Source model:** `qwen3.5:35B-A3B`
-- **FORGE operational alias:** `forge-qwen35-35B-A3B-ctx4096-nothink`
+- **FORGE operational alias:** `forge-qwen3-35B-A3B-ctx4096-nothink:latest`
 
-The source model is downloaded or imported first. The FORGE alias is the local name used for the performance run after the source model exists.
+The source model was downloaded or imported first. The FORGE alias above is the local name captured in the executed performance run.
 
 ## Fixed Rules
 
@@ -32,17 +32,17 @@ The source model is downloaded or imported first. The FORGE alias is the local n
 ollama run qwen3.5:35B-A3B
 /set verbose
 /set parameter num_ctx 4096
-/save forge-qwen3-35B-A3B-ctx4096-nothink
+/save forge-qwen3-35B-A3B-ctx4096-nothink:latest
 /bye
 ollama stop qwen3.5:35B-A3B
-ollama run forge-qwen3-35B-A3B-ctx4096-nothink --think=false --verbose --keepalive=0
+ollama run forge-qwen3-35B-A3B-ctx4096-nothink:latest --think=false --verbose --keepalive=0
 ```
 
 ## Frozen Baseline Parameters
 
 - Runtime/backend: Ollama
 - Source model: `qwen3.5:35B-A3B`
-- Operational alias: `forge-qwen35-35B-A3B-ctx4096-nothink`
+- Operational alias: `forge-qwen3-35B-A3B-ctx4096-nothink:latest`
 - Thinking profile: `no-thinking`
 - Context target: `4096`
 - Measurement style: FORGE original benchmark format
