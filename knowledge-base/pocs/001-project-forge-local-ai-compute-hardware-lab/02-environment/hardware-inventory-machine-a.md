@@ -15,7 +15,7 @@ The file also defines `Machine A v2` as a planned, unmeasured future state so th
 | Machine state | Status | Description |
 | --- | --- | --- |
 | Machine A v1 | Frozen / canonical | Current evidenced configuration: RTX 3070 8 GB + 32 GB system RAM + recorded software/runtime environment. |
-| Machine A v2 | Planned / unmeasured | Future configuration after the intended RAM upgrade to 64 GB system RAM. No independent measurement exists yet. |
+| Machine A v2 | Observed / memory validated | Future configuration after the RAM upgrade to 64 GB system RAM. Memory validation has been completed, but no FORGE performance or quality baseline has been run yet. |
 
 ## Machine A v1 Verified Inventory
 
@@ -30,24 +30,24 @@ The file also defines `Machine A v2` as a planned, unmeasured future state so th
 | CUDA / runtime | CUDA compatibility reported by `nvidia-smi`: 12.9; Ollama version 0.32.14 installed |
 | Ollama | Version 0.32.14 installed |
 | Relevant storage / model location | Not recorded |
-| Motherboard | Not recorded |
+| Motherboard | Gigabyte Technology Co. B760M G P WIFI DDR4 |
 
-## Machine A v2 Planned State
+## Machine A v2 Observed State
 
-| Category | Planned value |
+| Category | Observed value |
 | --- | --- |
-| System memory | 64 GB total, intended RAM upgrade from the frozen `Machine A v1` 32 GB configuration |
-| CPU | Same as `Machine A v1` unless later independently recorded |
-| Compute GPU | Same as `Machine A v1` unless later independently recorded |
-| GPU VRAM | Same as `Machine A v1` unless later independently recorded |
-| Motherboard | Not recorded |
-| Operating system | Not recorded |
-| NVIDIA driver | Not recorded |
-| CUDA / runtime | Not recorded |
-| Ollama | Not recorded |
+| System memory | 64 GB total |
+| Configuration | 4 × 16 GB DDR4 |
+| Speed configured | 2666 MT/s |
+| DDR4-A1 | Kingston HP26D4U6D8ME-16X, 16 GB |
+| DDR4-A2 | Kingston KHX2666C16/16G, 16 GB |
+| DDR4-B1 | Kingston HP26D4U6D8ME-16X, 16 GB |
+| DDR4-B2 | Kingston KHX2666C16/16G, 16 GB |
+| Windows Memory Diagnostic | Passed / 0 errors |
+| MemTest86 | Passed / 0 errors |
 | Relevant storage / model location | Not recorded |
 
-`Machine A v2` is intentionally left unmeasured until the RAM upgrade is physically completed and independently recorded.
+`Machine A v2` is observed and memory-validated, but it is not yet a FORGE benchmark baseline because no performance or quality workload has been run on this version.
 
 ## Relationship To FORGE Evidence
 
