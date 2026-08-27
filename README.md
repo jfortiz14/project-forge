@@ -13,7 +13,7 @@ The project measures more than token throughput: model-load time, prefill, gener
 
 ## Current Findings
 
-| Model on Machine A | Practical result |
+| Model on Machine A V1 | Practical result |
 | --- | --- |
 | Qwen3 8B | Usable–excellent; about 69 tok/s with complete GPU placement. |
 | Llama 3.1 8B | Usable–excellent; about 73 tok/s. |
@@ -21,7 +21,11 @@ The project measures more than token throughput: model-load time, prefill, gener
 | Qwen3 14B | Usable but slow; roughly 7 tok/s because of CPU/GPU offload. |
 | Qwen3 32B | Capacity-feasible but not interactive; about 2 tok/s. |
 | Ornith 1.5 35B-A3B Q4_K_M | Runnable under mixed CPU/GPU offload; 28.42–31.24 generation tok/s across three no-thinking baseline runs. Baseline format drifted, and no autonomous quality unit passed. |
-| Qwen3.5 35B-A3B Q4_K_M | Runnable under mixed CPU/GPU offload; 27.60–30.23 generation tok/s across three no-thinking baseline runs. Baseline prose was format-consistent, but no autonomous quality unit passed. |
+| Qwen3.5 35B-A3B Q4_K_M (32 GiB) | Runnable under mixed CPU/GPU offload; 27.60–30.23 generation tok/s across three no-thinking baseline runs. Baseline prose was format-consistent, but no autonomous quality unit passed. |
+
+| Model on Machine A V2 | Practical result |
+| --- | --- |
+| Qwen3.5 35B-A3B Q4_K_M (64 GiB) | Runnable under mixed CPU/GPU offload; 27.74–28.94 generation tok/s across three no-thinking cold runs. Load time was 14.25–14.76s and prefill was 184.36–191.47 tok/s; observed placement remained 76% CPU / 24% GPU. |
 
 Local models are treated as drafting and planning assistants. They are not accepted as autonomous authorities for architecture, implementation, testing, code review, or deployment; human review, compilation, and executable tests remain required.
 
