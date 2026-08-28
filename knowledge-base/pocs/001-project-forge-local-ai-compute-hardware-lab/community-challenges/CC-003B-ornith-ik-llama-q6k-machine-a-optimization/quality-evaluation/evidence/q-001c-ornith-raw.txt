@@ -1,0 +1,27 @@
+## 1. Architecture and Azure service choices
+
+The API is an ASP.NET Core minimal-API service. On acceptance it writes a durable status row, atomically create-or-returns by idempotency key, enqueues an Azure Service Bus message, and returns 202 with the submission id. A worker consumes messages, processes the document, and writes terminal status. Table Storage stores status and idempotency state; Blob Storage holds the referenced document. A managed identity authenticates all calls. Application Insights provides metrics, tracing, and structured logs. Health checks expose liveness and readiness; Service Bus delivers at-least-once with auto dead-lettering.
+
+## 2. C#/.NET module and API design
+
+Three projects bound the code: a shared domain library (entities, state machine, domain exceptions), the API project, and the worker project. The API exposes POST /submissions and GET /submissions/{id}. The submit handler accepts metadata, a blob reference, and a client idempotency key, then calls an IdempotentSubmitService. The worker registers a Service Bus handler. External dependencies go through interfaces; domain logic lives in the shared library, and projects hold only orchestration.
+
+## 3. Data, identity, and idempotency design
+
+Submission rows are keyed by partition = idempotency key and row = submission id, carrying an ETag, status enum, and processed flag. Create-or-return is atomic: the API inserts and, on a 409 conflict, returns the existing accepted row without re-enqueuing, making retries idempotent and assigning a message sequence number only on first enqueue.
+
+Both services use one system-assigned managed identity with per-resource role assignments. The API needs Service Bus Sender, scoped Table Storage Data Contributor, and scoped Blob Data Reader. The worker needs Service Bus Send, Receive, and Lease, plus Table Storage Data Contributor and Blob Data Reader over the same allowed scope. The blob reference is checked against an allowlist of container names and path prefixes before enqueue; out-of-scope references are rejected at the API.
+
+## 4. Failure handling and operations
+
+The worker claims work via a claim record holding a lease token and expiry. Claim acquisition uses optimistic concurrency so one instance wins; a stale lease is reclaimed after expiry, with backoff and manual review for repeated failures. Legal transitions: Accepted, Enqueued, Processing, then Completed, Failed, or Dead-Lettered, with no backward step except Failed to Processing on retry. The anti-duplicate rule requires confirming prior completion before any external side effect, so redelivery never doubles an effect.
+
+Retries use exponential backoff to a limit, then the bus dead-letters to a dedicated queue. Dead-letter ownership belongs to operations, not the worker. Messages are inspected by error type, retry count, and payload sample via an authorized admin API; replay is manual and tracked, never automatic. Logs carry a correlation ID propagated from the API through the bus to the worker. Health checks probe bus, storage, and blob scope; metrics track enqueue rate, latency, retries, and dead-letter volume.
+
+## 5. Test strategy
+
+Unit tests cover idempotent submit (conflict returns the existing row; first enqueue assigns a sequence), the state machine (rejecting illegal transitions), and lease claim and expiry against in-memory fakes. Integration tests run the API against live or emulator Service Bus and Table Storage, asserting acceptance and exactly-once enqueue. Blob-scope authorization is verified with allowlisted and rejected references. Worker tests use a message fake and assert a single side effect under redelivery. Unit tests run in CI always; integration tests run gated.
+
+## 6. Risks, assumptions, and open decisions
+
+Assumptions: the idempotency key is client-generated and stable; blob references are container and path strings; processing is bounded and failures retryable. Risks: Table Storage write contention on a hot partition, mitigated by spreading partitions. At-least-once delivery makes the anti-duplicate rule essential. Blob authorization depends on the allowlist staying current. Open decisions: Table Storage versus Cosmos DB for stronger consistency; worker runtime (Functions versus App Service); retry limits and dead-letter inspection tooling; and whether correlation IDs survive bus sessions.

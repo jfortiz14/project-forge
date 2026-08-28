@@ -3,7 +3,7 @@
 > **Category:** Community Challenge
 > **Parent POC:** `001-project-forge-local-ai-compute-hardware-lab`
 > **Experiment ID:** `FORGE-CC-003B`
-> **Status:** Closed — Machine A capacity/performance recommendation recorded; quality of lower-precision KV cache remains out of scope
+> **Status:** Closed and frozen — capacity/performance and quality evaluation complete
 
 ## Purpose
 
@@ -31,7 +31,7 @@ No single throughput maximum is treated as best. A candidate must be compared on
 2. Preserves an explicitly recorded usable context target.
 3. Reports stable RAM/VRAM pressure and actual placement.
 4. Produces cold-load, prefill, and generation evidence.
-5. Is practical for supervised interactive use; quality remains out of scope until separately authorized.
+5. Is practical for supervised interactive use; quality is assessed separately under the canonical protocol.
 
 ## Artifact Set
 
@@ -40,11 +40,13 @@ No single throughput maximum is treated as best. A candidate must be compared on
 - [Request contracts](request-contracts.md)
 - [Results matrix](results-matrix.md)
 - [Findings](findings.md)
+- [Quality evaluation](quality-evaluation/)
+- [Challenge closure](closure.md)
 
 ## Result
 
 CC-003B closed with a repeatable 196,608-token configuration on Machine A v2. The profile loaded again after a clean restart, completed RC-001 without truncation, and had already admitted and retained 165,017 prompt tokens under RC-004 without OOM.
 
-The recommendation is limited to capacity and performance. It does not establish answer-quality equivalence because the selected K/V cache types are `q4_0`/`q4_0` and no separate quality evaluation was authorized.
+The capacity/performance recommendation does not establish answer-quality equivalence because the selected K/V cache types are `q4_0`/`q4_0`. The separate [quality evaluation](quality-evaluation/) is complete and did not approve autonomous use. CC-003B is frozen; any new experiment requires a new challenge ID.
 
 `N/R` means not recorded or not measured, not zero or a failed result.

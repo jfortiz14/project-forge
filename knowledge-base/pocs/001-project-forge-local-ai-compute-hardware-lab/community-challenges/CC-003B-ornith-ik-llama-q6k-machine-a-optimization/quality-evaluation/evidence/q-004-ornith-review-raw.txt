@@ -1,0 +1,43 @@
+1. Material findings
+
+Finding 1 — IntakeRequest.Create omits the idempotency key (Material)
+- Contract requirement: "`IntakeRequest.Create` validates nonblank idempotency key, an absolute HTTP/HTTPS blob reference, and non-null metadata."
+- Symbol: `IntakeRequest.Create(Uri uri, IReadOnlyCollection<KeyValuePair<string, string>> metadata)`.
+- Why it is a defect: The contract lists idempotency-key validation as a responsibility of `IntakeRequest.Create`, but the method carries no idempotency-key parameter and performs no such check. The idempotency key exists only on `IntakeRecord.CreateQueued`, not on the request factory the contract enumerates. The harness asserts the required shape and fails: "Request factory accepts a client idempotency key" requires a `string idempotencyKey` parameter on `IntakeRequest.Create` (`factory!.GetParameters().Any(p => p.ParameterType == typeof(string) && p.Name == "idempotencyKey")`), which the method does not have.
+
+Finding 2 — IntakeRequest.Fingerprint is exposed mutably (Material)
+- Contract requirement: "immutable `IntakeRequest` and `IntakeRecord` types."
+- Symbol: `public byte[] Fingerprint => _fingerprint;`.
+- Why it is a defect: The property returns the internal `byte[]` by reference, so a caller can mutate the fingerprint and change the object's identity, breaking immutability. The harness demonstrates the breach and fails: "Request fingerprint is immutable to callers" runs `request.Fingerprint[0] ^= 0xFF` and then asserts the value is unchanged, which fails because the backing array was mutated directly. Returning a copy (e.g., `_fingerprint.Clone()`) would be required to honor the contract.
+
+Finding 3 — TryClaim carries the expected token rather than a new one (Material; contract ambiguity)
+- Contract requirement: TryClaim "returns a new `Processing` record with ... a new supplied concurrency token."
+- Symbols: `TryClaim(string workerAttemptId, DateTime nowUtc, TimeSpan leaseDuration, long expectedConcurrencyToken)`; the new record is built with `expectedConcurrencyToken` as its concurrency token.
+- Why it is a defect: The prose requires the claim result to carry a "new supplied concurrency token," and the test "Claim creates a distinct new concurrency token" asserts `claim.Record.ConcurrencyToken != 7` where 7 is the supplied `expectedConcurrencyToken`. The implementation passes `expectedConcurrencyToken` through unchanged, so the token is not new and the test fails. The ambiguity: the contract's explicit TryClaim signature lists only `expectedConcurrencyToken` (no `newConcurrencyToken`, unlike TryComplete/TryFail), so a genuinely new token would have to be derived rather than supplied, and the contract does not specify the derivation. Reusing the expected token both fails the test and contradicts the word "new." The contract should state whether claim rotates the token and, if so, how.
+
+2. Test-suite assessment
+
+The harness compiles (top-level statements, generic `Enum.GetNames<T>()`, tuple params) and prints `RESULT failures=3`. The three failing checks each correspond to a finding above:
+- "Request factory accepts a client idempotency key" — fails on the missing parameter; correctly surfaces Finding 1.
+- "Request fingerprint is immutable to callers" — fails on the mutable array; correctly surfaces Finding 2.
+- "Claim creates a distinct new concurrency token" — fails because the token is reused; aligns with Finding 3.
+
+The five passing checks are "Required enum values," "Fingerprint is metadata-order invariant," "Fingerprint includes the normalized URI," "UTC and lease validation," and "Completion clears the lease." Caveats: "UTC and lease validation" only exercises the `nowUtc.Kind` branch and never checks the `leaseDuration > 0` guard; and "Fingerprint includes the normalized URI" passes only because `Uri.LocalPath` includes the query string (had it not, the two queries would fingerprint identically and the check would fail). Regarding the third failing test, note the internal tension: the explicit TryClaim signature carries only `expectedConcurrencyToken`, so carrying it into the new record is the defensible reading of the signature, while the prose word "new" and the test expect a different token. The test is a reasonable reading of "new," but the contract itself is ambiguous here.
+
+3. Additional validation needed
+
+Passing these checks gives incomplete confidence because several required behaviors are untested:
+- `TryFail`: no test that a matching Processing worker/token transitions to `Failed` with no lease, nor that a mismatch or non-Processing state returns `NotClaimable`.
+- `Matches`: no test of equal/unequal fingerprint comparison (different metadata values or URIs).
+- Re-claim: no test that a `Processing` record with an expired lease can be claimed again, nor that one with a live lease returns `NotClaimable`.
+- Identity checks: no test for `TryComplete`/`TryFail` rejecting a wrong worker id or wrong expected token, or confirming the `newConcurrencyToken` lands on the resulting record.
+- `CreateQueued` validation: no test for blank idempotency key or null correlation id.
+- `leaseDuration`: the positive guard is untested.
+- URI normalization: no test that trailing slashes and default ports collapse to a single fingerprint (current code only trims trailing slashes and clears the port).
+- `IntakeRequest` surface: no test that `Metadata` and `Uri` are read-only, or that null/whitespace and null metadata keys/values are rejected.
+- Never produced or tested: `IntakeState.DeadLettered`, `IntakeDecision.Conflict`, and `IntakeDecision.Accepted`.
+- Minor code smell: `TryClaim` computes `var expected = _request.Fingerprint;` but never reads `expected`; it is dead code that hints at latent confusion (the actual guard is `actual != expectedConcurrencyToken`).
+
+4. Review verdict
+
+Fail — do not approve as-is. The core state machine (Queued → Processing → Completed/Failed) is internally consistent, but the implementation violates the contract in three places: `IntakeRequest.Create` lacks the idempotency key parameter the contract requires; `IntakeRequest.Fingerprint` is exposed mutably, breaking the stated immutability; and TryClaim reuses the supplied token instead of producing the "new" concurrency token the prose calls for. All three are independently backed by a failing harness check. The claim-token wording is genuinely ambiguous (the signature omits a new-token parameter), so the contract must be clarified before the implementation is pinned. Finally, the test suite has substantial coverage gaps (no coverage of `TryFail`, `Matches`, re-claim, identity rejection, or normalization). Resolving the three material findings and closing the coverage gaps is required before this unit satisfies the contract.

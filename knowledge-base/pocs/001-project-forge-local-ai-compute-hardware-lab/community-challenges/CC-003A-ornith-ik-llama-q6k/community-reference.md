@@ -13,6 +13,12 @@
 | Runtime commit | `0ed847d` |
 | Context | `262144` |
 
+### Contributor-Reported Operational Observation
+
+The contributor's fork reports the following practical long-context observation for Machine B: approximately **28 generation tokens/s**, approximately **567 prefill tokens/s at 242K tokens**, configured **262K context**, and **17.7% VRAM headroom at peak**.
+
+This is an external, contributor-reported observation. It was not reproduced under the frozen CC-003A attempt and must not be normalized into a direct performance ranking against Machine A, whose hardware, OS, cache configuration, batch size, and placement differ.
+
 ### Community Shipped Server Flags
 
 ```text

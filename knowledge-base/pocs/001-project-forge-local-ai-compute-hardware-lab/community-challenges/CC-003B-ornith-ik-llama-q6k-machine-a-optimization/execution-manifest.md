@@ -2,7 +2,7 @@
 
 > **Experiment:** `FORGE-CC-003B`
 > **Challenge:** `CC-003B-ornith-ik-llama-q6k-machine-a-optimization`
-> **Status:** Prepared — execution pending
+> **Status:** Closed and frozen — executed results are recorded in the results matrix and closure record.
 
 ## Fixed Baseline
 

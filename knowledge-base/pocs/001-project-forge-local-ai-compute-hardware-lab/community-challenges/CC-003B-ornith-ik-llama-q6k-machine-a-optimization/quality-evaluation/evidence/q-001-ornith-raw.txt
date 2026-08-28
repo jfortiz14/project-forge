@@ -1,0 +1,23 @@
+**1. Architecture and Azure service choices**
+
+Split into two deployable units: a stateless ASP.NET Core Web API (the write path) and a background worker (the processing path). Clients upload blobs directly to Azure Blob Storage and pass only a blob reference plus metadata to the API, so the API never streams document content. The API validates the request, records an initial status row, and publishes a message to Azure Service Bus. The worker consumes the message, processes the blob, and updates status. Service Bus queues carry work items with delivery guarantees, and dead-lettering routes poison messages. Azure Table Storage stores status and idempotency state. A single managed identity authenticates both units, and Azure Application Insights provides metrics and tracing.
+
+**2. C#/.NET module and API design**
+
+Organize the solution into layered projects: an API host, a worker host, a shared domain-contracts project, and a shared abstractions library. The API exposes one POST endpoint that accepts metadata and a blob reference, generates a correlation ID and a processing (idempotency) ID, validates the request, enqueues the message, and returns `202 Accepted` with the processing ID. The worker hosts a message handler built on an `IHostedService` that extracts the correlation ID, reads status, checks idempotency, processes, and commits. Define domain entities for metadata, status, and the work item, plus interfaces for the status store, blob client, and Service Bus sender/receiver so each unit depends on contracts, not concrete SDKs.
+
+**3. Data, identity, and idempotency design**
+
+Use Azure Table Storage for status and idempotency: it is inexpensive, schemaless, and supports fast partition- and row-key lookups. Use the processing ID as the row key and a stable domain prefix as the partition key. For idempotency, store the last completed result keyed by a client-supplied idempotency key; the worker reads first and skips reprocessing if a matching completed record exists. Authenticate with a system-assigned Microsoft Entra managed identity for both units. Grant the API Send access to Service Bus and Write access to Table Storage; grant the worker Read access to Blob Storage and Write access to Table Storage. All blobs use authenticated direct access—no connection strings or secrets in configuration.
+
+**4. Failure handling and operations**
+
+Wrap Service Bus and storage calls with a retry policy using exponential backoff and jitter to absorb transient faults. Configure Service Bus max delivery count so repeated failures move a message to the dead-letter queue for later inspection. Propagate the correlation ID through Service Bus message headers from API to worker. Emit structured logs that always include the correlation ID. Provide health checks for API reachability and dependency connectivity, plus worker subscription health. Record metrics: messages enqueued, processed, failed, retried, and end-to-end latency.
+
+**5. Test strategy**
+
+Unit-test the worker's processing logic with fakes for the status store, blob client, and message receiver, covering idempotent replay, retry exhaustion, and dead-letter routing. Unit-test API validation and request-shaping logic. Use `WebApplicationFactory` to integration-test the HTTP contract, asserting a `202` and the returned processing ID. Add integration tests that exercise the queue path against a real or test-hosted Service Bus and Table Storage in CI, verifying an initial status row is written and a message is enqueued. Keep unit tests fast and offline; reserve integration tests for the contract and persistence boundaries.
+
+**6. Risks, assumptions, and open decisions**
+
+Assume the blob exists and is readable when the worker runs, and that clients supply a unique idempotency key per document. Key risks include the worker running before the blob is available, concurrent handlers processing the same item twice, and eventual-consistency delays in Table Storage reads. Open decisions: whether Table Storage is sufficient or a queryable, globally consistent store is warranted under higher concurrency; how dead-letter messages are inspected and purged; and whether retries should back off based on message age.
