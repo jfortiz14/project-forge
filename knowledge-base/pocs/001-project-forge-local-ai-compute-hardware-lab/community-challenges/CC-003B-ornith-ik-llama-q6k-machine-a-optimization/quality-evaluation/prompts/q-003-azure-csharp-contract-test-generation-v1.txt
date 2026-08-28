@@ -1,0 +1,26 @@
+You are writing contract tests for a human-reviewed C# domain library. Produce one complete raw Program.cs file only. Do not use Markdown fences, explanation, external packages, test frameworks, I/O, network access, asynchronous code, reflection, or a Program class.
+
+The referenced library namespace is Forge.DocumentIntake. Its public API is:
+- IntakeState: Queued, Processing, Completed, Failed, DeadLettered.
+- IntakeDecision: Accepted, Conflict, NotClaimable, Claimed, Completed, Failed.
+- IntakeRequest.Create(string idempotencyKey, Uri blobReference, IReadOnlyDictionary<string, string> metadata).
+- IntakeRequest has IdempotencyKey, BlobReference, Metadata, and string Fingerprint.
+- IntakeRecord.CreateQueued(IntakeRequest request, string identifier, string correlationId, long concurrencyToken).
+- IntakeRecord has State, WorkerAttemptId, LeaseExpiryUtc, and ConcurrencyToken.
+- TryClaim(string workerAttemptId, DateTime nowUtc, TimeSpan leaseDuration, long expectedConcurrencyToken, long newConcurrencyToken) returns TransitionResult.
+- TryComplete(string workerAttemptId, long expectedConcurrencyToken, long newConcurrencyToken) returns TransitionResult.
+- TransitionResult has IntakeDecision Decision and nullable IntakeRecord Record.
+
+Write a small BCL-only console test harness that prints PASS or FAIL per check, returns process exit code 0 only when all checks pass, and otherwise returns 1. Use fixed UTC DateTime values; do not depend on wall-clock time.
+
+Required checks:
+1. Blank idempotency key is rejected with ArgumentException.
+2. Equivalent normalized URI plus metadata in different insertion order produces the same fingerprint.
+3. Different URI query values produce different fingerprints.
+4. A queued record claims successfully with the expected token and a distinct new token.
+5. Reusing the same token as the new claim token is rejected with ArgumentException.
+6. An active unexpired Processing lease cannot be claimed by a second worker.
+7. An expired Processing lease can be reclaimed by a second worker with a new token.
+8. A matching worker/token completes a record and the completed record has no lease.
+
+Use clear C# with BCL namespaces only. Output only the raw C# source.

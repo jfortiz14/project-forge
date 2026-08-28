@@ -5,6 +5,8 @@
 > **Data:** Synthetic/public only.  
 > **Evidence rule:** `N/R` means not recorded or not measured; it is not a loss.
 
+> **Program state:** The recorded CC-001, CC-002, CC-003A, and CC-003B set is closed and frozen. See the [closure record](community-challenges-closure.md).
+
 ## How To Use This Summary
 
 This document compares observed evidence without declaring a permanent overall winner. Performance and quality are separate dimensions, and differing prompt lengths, output lengths, capture methods, and evaluation fixtures limit direct ranking. Each row links to the detailed challenge evidence that remains authoritative.
@@ -28,6 +30,7 @@ This document compares observed evidence without declaring a permanent overall w
 | CC-001 Ornith | Ornith 1.5 35B-A3B Q4_K_M; `forge-ornith-35B-A3B-ctx4096-nothink` | 3 observed no-thinking runs | No autonomous quality acceptance | Runnable on Machine A; baseline format drift limits strict qualitative equivalence. | [challenge](CC-001-ornith/) · [performance](CC-001-ornith/CC-001A-independent-baseline/results-matrix.md) · [quality](CC-001-ornith/quality-evaluation-register-summary.md) |
 | CC-002 Qwen | `qwen3.5:35B-A3B` Q4_K_M; observed alias `forge-qwen3-35B-A3B-ctx4096-nothink:latest` | 3 observed no-thinking runs | No autonomous quality acceptance | Runnable on Machine A; baseline prose adhered more closely to requested structure, while quality units did not meet acceptance gates. | [challenge](CC-002-qwen/) · [performance](CC-002-qwen/CC-002A-independent-baseline/results-matrix.md) · [quality](CC-002-qwen/quality-evaluation/quality-evaluation-register-summary.md) |
 | CC-003A Ornith community reproduction | Ornith 1.5 35B-A3B Q6_K; ik_llama.cpp community configuration | **Closed:** 2 frozen-configuration startup attempts; no server readiness | N/R; quality phase not in scope | Machine A v2 reached CUDA/model metadata parsing but could not auto-fit the Q6_K configuration in either run; reducing background GPU load did not change the fit result. Failure is retained and the challenge is frozen; this is not a tuning or ranking result. | [challenge](CC-003A-ornith-ik-llama-q6k/) · [closure](CC-003A-ornith-ik-llama-q6k/closure.md) · [results matrix](CC-003A-ornith-ik-llama-q6k/results-matrix.md) |
+| CC-003B Ornith Machine A optimization | Ornith 1.5 35B-A3B Q6_K; ik_llama.cpp commit `0ed847d` | **Closed:** 196,608-context clean-restart profile; repeated bounded interactive requests and 165,017-token utilization evidence | Q-001/Q-001C, Q-002, Q-003, and Q-004 failed; Q-002F testable but contract fail (7/8) | Machine A v2 reached a repeatable 196K capacity/performance profile using batch 2048 and K/V cache `q4_0`/`q4_0`. Its no-thinking quality evaluation has direct planning/raw-source failures and a Q-004 review failure: 3 of 4 material defects found, but the URI-query fingerprint defect was omitted. | [challenge](CC-003B-ornith-ik-llama-q6k-machine-a-optimization/) · [quality](CC-003B-ornith-ik-llama-q6k-machine-a-optimization/quality-evaluation/) · [results matrix](CC-003B-ornith-ik-llama-q6k-machine-a-optimization/results-matrix.md) |
 
 ## Performance Evidence
 
@@ -37,30 +40,31 @@ The ranges below are observed values from each challenge's accepted baseline row
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CC-001 Ornith | 3 | 1m6.19s–1m7.27s | 89.04–106.13 tok/s | 28.42–31.24 tok/s | 1m30.75s–1m33.38s | 7,750–7,795 MiB / 8,192 MiB where recorded | 75%/25% CPU/GPU where recorded; Markdown headings/bold caused partial benchmark-format comparability. |
 | CC-002 Qwen | 3 | 1m10.81s–1m11.91s | 63.09–104.48 tok/s | 27.60–30.23 tok/s | 1m20.57s–1m36.26s | 7,694–7,785 MiB / 8,192 MiB | 76%/24% CPU/GPU; plain prose stayed closer to the requested baseline structure. |
+| CC-003B Ornith Q6_K / ik_llama.cpp | 2 accepted interactive runs + 1 large-context utilization run | N/R; initial load timestamp was not captured | 78.54–83.46 tok/s (162-token prompt) | 19.11–19.37 tok/s (4,615–4,660-token responses) | 4m0.18s–4m5.96s interactive; 2m11.88s for 165,017-token prefill | 7,103–7,213 MiB / 8,192 MiB loaded idle; 760–916 MiB free where recorded | 196,608 context; batch 2,048; K/V cache `q4_0`/`q4_0`; 38 expert overrides. Separate 165,017-token prefill reached 1,255.92 tok/s. Not directly comparable to the 4K CC-001/CC-002 baselines. |
 
 ## Quality Capability Outcomes
 
-| Capability | CC-001 Ornith | CC-002 Qwen | Comparison boundary |
-| --- | --- | --- | --- |
-| Azure/C# planning | Fail; planning and one corrective pass did not satisfy the fixed requirements. | Fail; planning and one corrective pass exceeded the fixed range and retained material design gaps. | Same quality contract/prompt family; outcomes do not establish a general model ranking. |
-| C# implementation | Fail; raw output and pipeline re-run did not compile. | Fail; raw output and two separate reproducibility captures did not compile. | Both failed the raw-source compile gate. |
-| Minimal human repair | Testable after fence removal plus one code-line repair; 4 of 8 contract checks failed. | N/R; no eligible two-fence baseline, so no repair was invented. | Not directly comparable. |
-| C# test generation | Fail; generated suite did not compile, including its fence-only derivation. | Fail; generated suite did not compile against the frozen human reference. | Neither produced execution or mutant-detection evidence. |
-| Code and test review | Fail; 0 of 4 known material defects identified and 1 material false positive. | Fail; 4 of 4 known defects identified, but read-only, format, and traceability constraints were violated. | CC-002 uses review fixture v2 after CC-001 v1 hash drift; compare defect recognition cautiously. |
+| Capability | CC-001 Ornith | CC-002 Qwen | CC-003B Ornith / ik_llama.cpp Q6_K | Comparison boundary |
+| --- | --- | --- | --- | --- |
+| Azure/C# planning | Fail; planning and one corrective pass did not satisfy the fixed requirements. | Fail; planning and one corrective pass exceeded the fixed range and retained material design gaps. | Fail; Q-001 and Q-001C exceeded the word range; corrective idempotency/handoff/effect-safety gaps remained. | Same quality contract/prompt family; outcomes do not establish a general model ranking. |
+| C# implementation | Fail; raw output and pipeline re-run did not compile. | Fail; raw output and two separate reproducibility captures did not compile. | Fail; Q-002 literal output contained Markdown fences. Q-002F passed its valid short-path build after the physical-path `MAX_PATH` incident, then passed 7/8 contract checks. | Both completed autonomous units failed the raw-source compile gate. |
+| Minimal human repair | Testable after fence removal plus one code-line repair; 4 of 8 contract checks failed. | N/R; no eligible two-fence baseline, so no repair was invented. | Testable, contract fail; Q-002F is format-only, and only claim-token rotation failed (7/8 pass). | Not directly comparable. |
+| C# test generation | Fail; generated suite did not compile, including its fence-only derivation. | Fail; generated suite did not compile against the frozen human reference. | Fail; raw output had fences; Q-003F reached `CS1513`. One-brace Q-003H repair compiled but passed only 6/8 checks against the frozen reference. | Neither produced mutant-detection evidence. |
+| Code and test review | Fail; 0 of 4 known material defects identified and 1 material false positive. | Fail; 4 of 4 known defects identified, but read-only, format, and traceability constraints were violated. | Fail; 3 of 4 known defects identified; the URI-query fingerprint defect was omitted and incorrectly treated as passing. Required format and review-only boundary were met. | CC-002 uses review fixture v2 after CC-001 v1 hash drift; CC-003B uses the same v2 fixture. Compare defect recognition cautiously. |
 
 ## Notable Failure Modes
 
-| Area | CC-001 Ornith | CC-002 Qwen |
-| --- | --- | --- |
-| Output discipline | Markdown fences appeared in raw C# implementation and generated-test outputs. | Markdown fences or non-source/trailing text appeared in all measured implementation captures. |
-| Implementation acceptance | Minimal repair enabled compilation, but tests exposed missing idempotency validation, URI-query fingerprinting, fingerprint immutability, and claim-token rotation. | No implementation candidate reached contractual tests because no raw capture passed compilation. |
-| Test generation | Fence removal still left unresolved API references. | Required BCL imports were absent and a local was redeclared. |
-| Review behavior | Invented retry/lease semantics and proposed a non-compliant replacement. | Generated a replacement solution and assumed the submitted implementation was partial. |
+| Area | CC-001 Ornith | CC-002 Qwen | CC-003B Ornith / ik_llama.cpp Q6_K |
+| --- | --- | --- | --- |
+| Output discipline | Markdown fences appeared in raw C# implementation and generated-test outputs. | Markdown fences or non-source/trailing text appeared in all measured implementation captures. | Markdown fences appeared in Q-002 and Q-003 raw outputs. |
+| Implementation acceptance | Minimal repair enabled compilation, but tests exposed missing idempotency validation, URI-query fingerprinting, fingerprint immutability, and claim-token rotation. | No implementation candidate reached contractual tests because no raw capture passed compilation. | Q-002 did not reach tests. Its fence-only derivative compiled through the short path and failed one of eight checks: claim-token rotation. |
+| Test generation | Fence removal still left unresolved API references. | Required BCL imports were absent and a local was redeclared. | Q-003F reached a missing-brace error; one-brace Q-003H repair made it executable but failed expired-lease and completion checks against the reference. |
+| Review behavior | Invented retry/lease semantics and proposed a non-compliant replacement. | Generated a replacement solution and assumed the submitted implementation was partial. | Followed the required review structure without code replacement, but falsely concluded `LocalPath` includes the URI query. |
 
 ## Interpretation And Limitations
 
-- Both profiles were demonstrably loadable and runnable on the frozen Machine A baseline under no-thinking controls.
-- The current quality evidence does not support autonomous use of either profile for the evaluated Azure/C# tasks.
+- CC-001, CC-002, and CC-003B profiles were demonstrably loadable and runnable on their recorded Machine A baselines under no-thinking controls.
+- The current quality evidence does not support autonomous use of any evaluated quality profile for the Azure/C# tasks; CC-003B Q-004 is closed fail and Q-002F is an independent format-only derivative that failed one contractual check.
 - Qwen's baseline response formatting and review defect recognition are useful observations, not an overall win: its quality units still failed their respective acceptance contracts.
 - Ornith's one-line repair result measures human-plus-model effort only, not autonomous implementation quality.
 - Performance numbers should not be used as procurement, cost, production, or security decisions. Mixed CPU/GPU placement, VRAM pressure, prompt/output length differences, and load semantics remain material caveats.

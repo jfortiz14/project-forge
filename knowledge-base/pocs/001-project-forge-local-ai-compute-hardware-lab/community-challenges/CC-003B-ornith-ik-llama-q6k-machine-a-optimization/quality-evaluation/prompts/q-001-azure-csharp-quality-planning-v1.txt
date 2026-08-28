@@ -1,0 +1,21 @@
+You are a senior Azure and C#/.NET application architect. Design a small, maintainable document-intake service for a public/synthetic workload.
+
+Fixed requirements:
+- An ASP.NET Core HTTP API accepts document metadata and a blob-reference, but not document content.
+- The API must return quickly and enqueue background processing through Azure Service Bus.
+- The worker must be idempotent and handle transient failures, retry limits, and dead-letter processing.
+- Use Microsoft Entra managed identity; do not use connection strings or secrets in application configuration.
+- Store processing status and idempotency state in Azure Table Storage or another Azure service you justify.
+- Include structured logging, correlation IDs, health checks, and operational metrics/tracing.
+- Define C#/.NET module boundaries, failure behavior, and a focused unit/integration-test strategy.
+- Do not invent product-specific limits, pricing, or compliance claims.
+
+Deliver exactly these six labeled sections:
+1. Architecture and Azure service choices
+2. C#/.NET module and API design
+3. Data, identity, and idempotency design
+4. Failure handling and operations
+5. Test strategy
+6. Risks, assumptions, and open decisions
+
+Use clear technical English. Keep the answer between 450 and 600 words. Do not write implementation code, tables, citations, or use external tools.
